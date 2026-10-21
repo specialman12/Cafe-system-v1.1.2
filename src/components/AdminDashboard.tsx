@@ -570,6 +570,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [copyrightTextInput, setCopyrightTextInput] = useState(settings.developerRights?.copyrightText || '');
   const [developerSavedMsg, setDeveloperSavedMsg] = useState(false);
 
+  // Custom Live Domain / Vercel URL for QR codes and Table links
+  const [customDomainInput, setCustomDomainInput] = useState(settings.customDomainUrl || '');
+  const [domainSavedMsg, setDomainSavedMsg] = useState(false);
+
+  const handleSaveCustomDomain = (newDomain?: string) => {
+    const domainToSave = (newDomain !== undefined ? newDomain : customDomainInput).trim();
+    setSettings(prev => ({ ...prev, customDomainUrl: domainToSave }));
+    setCustomDomainInput(domainToSave);
+    setDomainSavedMsg(true);
+    setTimeout(() => setDomainSavedMsg(false), 3000);
+    if (onAddLog) {
+      onAddLog('settings', 'info', `تم تحديث رابط الدومين الحقيقي للباركود: ${domainToSave || 'الافتراضي'}`);
+    }
+  };
+
   // Keep state in sync with external settings updates
   useEffect(() => {
     if (settings.systemName !== undefined) setSystemNameInput(settings.systemName);
@@ -609,6 +624,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       setNewDevPassword(settings.developerPassword);
     }
   }, [settings.developerPassword]);
+
+  useEffect(() => {
+    if (settings.customDomainUrl !== undefined) {
+      setCustomDomainInput(settings.customDomainUrl);
+    }
+  }, [settings.customDomainUrl]);
 
   const handleSaveBrowserBrand = () => {
     const trimmedAdminTitle = adminPageTitleInput.trim() || `لوحة الإدارة - ${settings.systemName || 'Smart Café'}`;
@@ -1950,9 +1971,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return o.status === orderFilter;
   });
 
+  const getEffectiveOrigin = () => {
+    if (settings.customDomainUrl && settings.customDomainUrl.trim()) {
+      let raw = settings.customDomainUrl.trim();
+      if (!raw.startsWith('http://') && !raw.startsWith('https://')) {
+        raw = 'https://' + raw;
+      }
+      return raw.replace(/\/+$/, '');
+    }
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    return '';
+  };
+
   // Host URL for QR generation (always generates clean client URLs without admin keywords)
   const getTableUrl = (tNum: number) => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const origin = getEffectiveOrigin();
     let path = typeof window !== 'undefined' ? window.location.pathname : '';
     // Strip /admin or any admin subpath
     path = path.replace(/\/admin\/?$/i, '').replace(/\/admin/gi, '');
@@ -1966,7 +2001,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const getViewOnlyUrl = () => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const origin = getEffectiveOrigin();
     let path = typeof window !== 'undefined' ? window.location.pathname : '';
     path = path.replace(/\/admin\/?$/i, '').replace(/\/admin/gi, '');
     if (!path.startsWith('/')) path = '/' + path;
@@ -4891,6 +4926,100 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 )}
               </div>
             </div>
+
+            {/* 🌐 Live Domain & Localhost Resolver Card */}
+            {(() => {
+              const isLocalHost = typeof window !== 'undefined' && (
+                window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' ||
+                window.location.hostname === '0.0.0.0'
+              );
+              const currentBase = getEffectiveOrigin();
+
+              return (
+                <div className="bg-white rounded-3xl p-5 border-2 border-stone-200/80 shadow-xs space-y-3.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-2xl bg-[#BA8E58]/15 flex items-center justify-center text-[#BA8E58]">
+                        <Globe size={18} />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-sm text-[#2D1E18]">
+                          رابط الموقع الحقيقي المنشور للباركود (Live Vercel / Cloud Domain)
+                        </h3>
+                        <p className="text-[11px] text-stone-500">
+                          الرابط الذي يتم كتابته داخل رموز QR للزبائن وعند نسخ أو مشاركة الروابط
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                      <span className="text-[11px] text-stone-400 font-bold">الرابط المعتمد حالياً:</span>
+                      <span className="text-[11px] font-mono px-2.5 py-1 rounded-xl bg-stone-100 text-[#3D271D] font-bold border border-stone-200 max-w-[220px] truncate" dir="ltr">
+                        {currentBase}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Warning if running on Localhost without custom domain set */}
+                  {isLocalHost && !settings.customDomainUrl && (
+                    <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-300/80 flex items-start gap-3">
+                      <AlertCircle size={18} className="text-amber-700 shrink-0 mt-0.5" />
+                      <div className="text-xs text-amber-950 space-y-1">
+                        <p className="font-bold text-amber-900">
+                          ⚠️ تنبيه: أنت تتصفح حالياً من السيرفر الداخلي التجريبي (localhost)
+                        </p>
+                        <p className="text-[11px] text-amber-900/80 leading-relaxed">
+                          عند مسح الباركود بهاتف خارجي أو كاميرا الزبون، لن يفتح الموقع لأن الهاتف لا يستطيع رؤية كمبيوترك الداخلي عبر "localhost".
+                          <br />
+                          <strong>الحل:</strong> بعد رفع المشروع على Vercel أو عندما يكون لديك رابط حقيقي (مثلاً: <span dir="ltr" className="font-mono font-bold text-amber-950">https://your-cafe.vercel.app</span>)، ضعه في الخانة أدناه واضغط <strong>"حفظ الرابط الحقيقي"</strong> ليتم تحديث كافة الباركودات فوراً!
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Input form */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                    <div className="relative flex-1">
+                      <input
+                        type="url"
+                        value={customDomainInput}
+                        onChange={(e) => setCustomDomainInput(e.target.value)}
+                        placeholder="ضع رابط موقعك الحقيقي هنا (مثال: https://mycafe.vercel.app)"
+                        dir="ltr"
+                        className="w-full px-4 py-2.5 rounded-2xl border border-stone-200 focus:outline-none focus:border-[#BA8E58] text-xs font-mono bg-stone-50/60 text-stone-900 placeholder:text-stone-400 placeholder:font-sans"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSaveCustomDomain(customDomainInput)}
+                      className="px-5 py-2.5 rounded-2xl bg-[#3D271D] hover:bg-[#2A1D15] text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 cursor-pointer"
+                    >
+                      <Check size={14} />
+                      <span>حفظ وتحديث الباركودات</span>
+                    </button>
+
+                    {settings.customDomainUrl && (
+                      <button
+                        type="button"
+                        onClick={() => handleSaveCustomDomain('')}
+                        className="px-3 py-2.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition-colors shrink-0 cursor-pointer"
+                        title="إعادة التعيين للرابط التلقائي للمتصفح"
+                      >
+                        استعادة الافتراضي
+                      </button>
+                    )}
+                  </div>
+
+                  {domainSavedMsg && (
+                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 animate-fadeIn">
+                      <CheckCircle2 size={14} className="text-emerald-600" />
+                      <span>تم تحديث كافة روابط ورموز QR للطاولات بنجاح بالرابط الجديد! ✓</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* QR Tools & Table Creation Controls */}
             <div className="bg-white rounded-3xl p-5 border border-[#E5D5BC] shadow-sm space-y-4">

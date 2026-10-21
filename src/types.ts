@@ -241,6 +241,7 @@ export interface SystemSettings {
   adminPassword?: string;
   adminPin?: string;
   currencySymbol?: string;
+  customDomainUrl?: string; // رابط الدومين الحقيقي المنشور (مثل رابط Vercel أو الدومين المخصص) لطباعة الباركودات ومشاركتها
   taxEnabled?: boolean; // تفعيل أو إلغاء احتساب الضريبة
   taxRate?: number;
   loyaltyDiscountEnabled?: boolean; // تفعيل خصم الولاء للعملاء العائدين
