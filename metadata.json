@@ -1,0 +1,6 @@
+{
+  "name": "Smart Menu System - نظام المنيو الذكي",
+  "description": "A comprehensive smart restaurant menu and table management system with admin dashboard, real-time orders, analytics, menu card builder, customizable notification sounds, QR table system, and promotional banners.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

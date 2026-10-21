@@ -1,0 +1,116 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Order",
+      "description": "Customer order containing cart items, total amount, and preparation status.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "tableNumber": { "type": "number" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "subtotal": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "preparing", "ready", "delivered", "completed", "cancelled"] },
+        "createdAt": { "type": "string" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "paymentMethod": { "type": "string", "enum": ["cash", "card"] },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "customerPhone": { "type": "string", "maxLength": 30 }
+      },
+      "required": ["id", "tableNumber", "items", "total", "status", "createdAt"]
+    },
+    "Table": {
+      "title": "Table",
+      "description": "Restaurant table occupancy status and active session info.",
+      "type": "object",
+      "properties": {
+        "tableNumber": { "type": "number" },
+        "status": { "type": "string", "enum": ["available", "busy", "bill_requested"] },
+        "currentOrderId": { "type": "string", "maxLength": 128 },
+        "seatedAt": { "type": "string" },
+        "activeSessionCustomerName": { "type": "string", "maxLength": 100 },
+        "billRequested": { "type": "boolean" }
+      },
+      "required": ["tableNumber", "status"]
+    },
+    "BillRequest": {
+      "title": "BillRequest",
+      "description": "Request submitted by table customer for bill settlement and receipt.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "tableNumber": { "type": "number" },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "requestedAt": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "served", "settled"] },
+        "totalAmount": { "type": "number" }
+      },
+      "required": ["id", "tableNumber", "requestedAt", "status"]
+    },
+    "MenuItem": {
+      "title": "MenuItem",
+      "description": "Food and drink items offered on the menu.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "categoryId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 150 },
+        "nameEn": { "type": "string", "maxLength": 150 },
+        "price": { "type": "number" },
+        "description": { "type": "string", "maxLength": 500 },
+        "available": { "type": "boolean" },
+        "isPopular": { "type": "boolean" }
+      },
+      "required": ["id", "categoryId", "name", "price", "available"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Menu category classification.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "nameEn": { "type": "string", "maxLength": 100 },
+        "order": { "type": "number" }
+      },
+      "required": ["id", "name"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "Global cafe system settings and identity configuration.",
+      "type": "object",
+      "properties": {
+        "systemName": { "type": "string", "maxLength": 100 },
+        "currencySymbol": { "type": "string", "maxLength": 10 },
+        "taxEnabled": { "type": "boolean" },
+        "taxRate": { "type": "number" }
+      }
+    }
+  },
+  "firestore": {
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "All restaurant dine-in and takeaway orders."
+    },
+    "/tables/{tableNumber}": {
+      "schema": { "$ref": "#/entities/Table" },
+      "description": "Real-time table occupancy status and active sessions."
+    },
+    "/bill_requests/{billId}": {
+      "schema": { "$ref": "#/entities/BillRequest" },
+      "description": "Table bill settlement requests."
+    },
+    "/menu_items/{itemId}": {
+      "schema": { "$ref": "#/entities/MenuItem" },
+      "description": "Menu items catalog."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Menu categories."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/SystemSettings" },
+      "description": "Application settings and branding."
+    }
+  }
+}

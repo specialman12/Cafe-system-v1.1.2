@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    border-color: theme('colors.slate.200');
+  }
+}

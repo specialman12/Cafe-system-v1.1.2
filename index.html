@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Menu System - نظام المنيو الذكي</title>
+    <meta name="theme-color" content="#BA8E58" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <meta name="description" content="نظام المنيو الذكي وإدارة المطاعم والطاولات" />
+    <meta property="og:title" content="Smart Menu System - نظام المنيو الذكي" />
+    <meta property="og:description" content="نظام المنيو الذكي وإدارة المطاعમ والطاولات" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- Firebase Cloud Integration via CDN Script (Direct HTML Native Script) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+      import { 
+        getFirestore, 
+        doc, 
+        collection, 
+        getDoc, 
+        getDocs, 
+        setDoc, 
+        updateDoc, 
+        deleteDoc, 
+        onSnapshot, 
+        query, 
+        orderBy, 
+        serverTimestamp 
+      } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCNqAWmLoI_1ycJ6ZBpvdo3JG2hFy2XS_k",
+        authDomain: "gen-lang-client-0437396933.firebaseapp.com",
+        projectId: "gen-lang-client-0437396933",
+        storageBucket: "gen-lang-client-0437396933.firebasestorage.app",
+        messagingSenderId: "425779314327",
+        appId: "1:425779314327:web:bc3c9b58998e9b4cb3f3d2"
+      };
+
+      try {
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app, "ai-studio-cafesystem-69346165-5b5d-4de2-a112-03bf0369b895");
+        const auth = getAuth(app);
+
+        window.__FIREBASE_CONFIG__ = firebaseConfig;
+        window.firebaseApp = app;
+        window.firestoreDb = db;
+        window.firebaseAuth = auth;
+        window.firebase = {
+          app,
+          db,
+          auth,
+          doc,
+          collection,
+          getDoc,
+          getDocs,
+          setDoc,
+          updateDoc,
+          deleteDoc,
+          onSnapshot,
+          query,
+          orderBy,
+          serverTimestamp
+        };
+
+        window.dispatchEvent(new CustomEvent('firebase:ready', { detail: { app, db, auth } }));
+        console.log("🔥 [Firebase] Initialized successfully via CDN script in HTML");
+      } catch (err) {
+        console.warn("Firebase script init warning:", err);
+      }
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
