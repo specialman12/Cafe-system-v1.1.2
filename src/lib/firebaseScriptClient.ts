@@ -4,7 +4,7 @@
  * Exposes window.firebase for HTML and React components
  */
 
-import { Order, TableInfo, BillRequest } from '../types';
+import { Order, TableInfo, BillRequest, MenuItem, Category, SystemSettings } from '../types';
 
 export interface FirebaseClientInterface {
   isReady: boolean;
@@ -15,6 +15,14 @@ export interface FirebaseClientInterface {
   onTablesSnapshot: (callback: (tables: TableInfo[]) => void) => () => void;
   saveBillRequest: (bill: BillRequest) => Promise<boolean>;
   onBillsSnapshot: (callback: (bills: BillRequest[]) => void) => () => void;
+  saveMenuItem: (item: MenuItem) => Promise<boolean>;
+  deleteMenuItem: (itemId: string) => Promise<boolean>;
+  onMenuSnapshot: (callback: (items: MenuItem[]) => void) => () => void;
+  saveCategory: (category: Category) => Promise<boolean>;
+  deleteCategory: (categoryId: string) => Promise<boolean>;
+  onCategoriesSnapshot: (callback: (categories: Category[]) => void) => () => void;
+  saveSettings: (settings: SystemSettings) => Promise<boolean>;
+  onSettingsSnapshot: (callback: (settings: SystemSettings | null) => void) => () => void;
 }
 
 function getFirebase() {
@@ -156,6 +164,124 @@ export const firebaseScriptClient: FirebaseClientInterface = {
         console.warn('[Firebase Script Client] bills onSnapshot error:', err);
       });
       return unsubscribe;
+    } catch {
+      return () => {};
+    }
+  },
+
+  async saveMenuItem(item: MenuItem): Promise<boolean> {
+    try {
+      const fb = getFirebase();
+      if (!fb || !fb.db || !fb.doc || !fb.setDoc) return false;
+      const ref = fb.doc(fb.db, 'menu_items', String(item.id));
+      await fb.setDoc(ref, { ...item, updatedAt: new Date().toISOString() }, { merge: true });
+      return true;
+    } catch (err) {
+      console.warn('[Firebase Script Client] saveMenuItem error:', err);
+      return false;
+    }
+  },
+
+  async deleteMenuItem(itemId: string): Promise<boolean> {
+    try {
+      const fb = getFirebase();
+      if (!fb || !fb.db || !fb.doc || !fb.deleteDoc) return false;
+      const ref = fb.doc(fb.db, 'menu_items', String(itemId));
+      await fb.deleteDoc(ref);
+      return true;
+    } catch (err) {
+      console.warn('[Firebase Script Client] deleteMenuItem error:', err);
+      return false;
+    }
+  },
+
+  onMenuSnapshot(callback: (items: MenuItem[]) => void): () => void {
+    try {
+      const fb = getFirebase();
+      if (!fb || !fb.db || !fb.collection || !fb.onSnapshot) return () => {};
+      const col = fb.collection(fb.db, 'menu_items');
+      return fb.onSnapshot(col, (snapshot: any) => {
+        const list: MenuItem[] = [];
+        snapshot.forEach((docSnap: any) => {
+          const data = docSnap.data();
+          if (data && data.id) list.push(data as MenuItem);
+        });
+        callback(list);
+      }, () => {});
+    } catch {
+      return () => {};
+    }
+  },
+
+  async saveCategory(category: Category): Promise<boolean> {
+    try {
+      const fb = getFirebase();
+      if (!fb || !fb.db || !fb.doc || !fb.setDoc) return false;
+      const ref = fb.doc(fb.db, 'categories', String(category.id));
+      await fb.setDoc(ref, { ...category, updatedAt: new Date().toISOString() }, { merge: true });
+      return true;
+    } catch (err) {
+      console.warn('[Firebase Script Client] saveCategory error:', err);
+      return false;
+    }
+  },
+
+  async deleteCategory(categoryId: string): Promise<boolean> {
+    try {
+      const fb = getFirebase();
+      if (!fb || !fb.db || !fb.doc || !fb.deleteDoc) return false;
+      const ref = fb.doc(fb.db, 'categories', String(categoryId));
+      await fb.deleteDoc(ref);
+      return true;
+    } catch (err) {
+      console.warn('[Firebase Script Client] deleteCategory error:', err);
+      return false;
+    }
+  },
+
+  onCategoriesSnapshot(callback: (categories: Category[]) => void): () => void {
+    try {
+      const fb = getFirebase();
+      if (!fb || !fb.db || !fb.collection || !fb.onSnapshot) return () => {};
+      const col = fb.collection(fb.db, 'categories');
+      return fb.onSnapshot(col, (snapshot: any) => {
+        const list: Category[] = [];
+        snapshot.forEach((docSnap: any) => {
+          const data = docSnap.data();
+          if (data && data.id) list.push(data as Category);
+        });
+        callback(list);
+      }, () => {});
+    } catch {
+      return () => {};
+    }
+  },
+
+  async saveSettings(settings: SystemSettings): Promise<boolean> {
+    try {
+      const fb = getFirebase();
+      if (!fb || !fb.db || !fb.doc || !fb.setDoc) return false;
+      const ref = fb.doc(fb.db, 'settings', 'global_settings');
+      await fb.setDoc(ref, { ...settings, updatedAt: new Date().toISOString() }, { merge: true });
+      return true;
+    } catch (err) {
+      console.warn('[Firebase Script Client] saveSettings error:', err);
+      return false;
+    }
+  },
+
+  onSettingsSnapshot(callback: (settings: SystemSettings | null) => void): () => void {
+    try {
+      const fb = getFirebase();
+      if (!fb || !fb.db || !fb.doc || !fb.onSnapshot) return () => {};
+      const ref = fb.doc(fb.db, 'settings', 'global_settings');
+      return fb.onSnapshot(ref, (docSnap: any) => {
+        if (docSnap.exists && docSnap.exists()) {
+          callback(docSnap.data() as SystemSettings);
+        } else {
+          callback(null);
+        }
+      }, () => {});
     } catch {
       return () => {};
     }
